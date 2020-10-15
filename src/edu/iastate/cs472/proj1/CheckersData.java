@@ -75,7 +75,18 @@ public class CheckersData {
      * and all such squares in the last three rows contain red squares.
      */
     void setUpGame() {
-        // Todo: setup the board with pieces BLACK, RED, and EMPTY
+        // note: since it's an array of primitives, everything is by default initialized to 0 = EMPTY.
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (i % 2 == j % 2) { // we need to place a piece
+                    if (i < 3) { // we should place a black piece
+                        board[i][j] = BLACK;
+                    } else if (i > board.length - 3) { // we should place a red piece
+                        board[i][j] = RED;
+                    }
+                }
+            }
+        }
     }
 
 
