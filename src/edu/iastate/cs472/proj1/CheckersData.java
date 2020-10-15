@@ -85,7 +85,7 @@ public class CheckersData {
                 if (i % 2 == j % 2) { // we need to place a piece
                     if (i < 3) { // we should place a black piece
                         board[i][j] = BLACK;
-                    } else if (i > board.length - 3) { // we should place a red piece
+                    } else if (i >= board.length - 3) { // we should place a red piece
                         board[i][j] = RED;
                     }
                 }
@@ -342,8 +342,8 @@ public class CheckersData {
      * Helper method to determine if the given player is allowed
      * to take the given target piece, returning true if it can and false otherwise.
      *
-     * @param piece
-     * @param player
+     * @param piece The piece that we are trying to take
+     * @param player The player that is attempting to capture the piece
      * @return
      */
     private boolean canTakeAs(int piece, int player) {
