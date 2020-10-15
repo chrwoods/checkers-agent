@@ -2,6 +2,7 @@ package edu.iastate.cs472.proj1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * An object of this class holds data about a game of checkers.
@@ -104,7 +105,7 @@ public class CheckersData {
      * @return  true if the piece becomes a king, otherwise false
      */
     boolean makeMove(CheckersMove move) {
-        return makeMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
+        return makeMove(move.fromRow, move.fromCol, move.toRow, move.toCol, move.isJump());
     }
 
 
@@ -121,12 +122,20 @@ public class CheckersData {
      * @param toCol   column index of the to square
      * @return        true if the piece becomes a king, otherwise false
      */
-    boolean makeMove(int fromRow, int fromCol, int toRow, int toCol) {
-        // Todo: update the board for the given move.
-        // You need to take care of the following situations:
+    private boolean makeMove(int fromRow, int fromCol, int toRow, int toCol, boolean isJump) {
         // 1. move the piece from (fromRow,fromCol) to (toRow,toCol)
+        board[toRow][toCol] = pieceAt(fromRow, fromCol);
+        board[fromRow][fromCol] = EMPTY;
         // 2. if this move is a jump, remove the captured piece
+        if (isJump) {
+            board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] = EMPTY;
+        }
         // 3. if the piece moves into the kings row on the opponent's side of the board, crowned it as a king
+        if (toRow == 0 && pieceAt(toRow, toCol) == RED) { // make a red king if it reached the top
+            board[toRow][toCol] = RED_KING;
+        } else if (toRow == board.length - 1 && pieceAt(toRow, toCol) == BLACK) { // make a black king if it reached the bottom
+            board[toRow][toCol] = BLACK_KING;
+        }
     }
 
     /**
@@ -158,7 +167,15 @@ public class CheckersData {
      */
     CheckersMove[] getLegalJumpsFrom(int player, int row, int col) {
         // Todo: Implement your getLegalJumpsFrom here.
-        return null;
+        List<CheckersMove> legalJumps = new ArrayList<>(4);
+        switch (pieceAt(row, col)) {
+            default:
+                return null;
+            case RED:
+
+        }
+        if (legalJumps.isEmpty()) return null;
+        return legalJumps.toArray(new CheckersMove[0]);
     }
 
 }
