@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * @author cswoods
+ *
  * An object of this class holds data about a game of checkers.
  * It knows what kind of piece is on each square of the checkerboard.
  * Note that RED moves "up" the board (i.e. row number decreases)
@@ -160,7 +162,9 @@ public class CheckersData {
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 if (i % 2 == j % 2) { // checkers are only on every other square
-                    legalMoves.addAll(Arrays.asList(getLegalJumpsFrom(player, i, j)));
+                    CheckersMove[] jumps = getLegalJumpsFrom(player, i, j);
+                    if (jumps != null)
+                        legalMoves.addAll(Arrays.asList(jumps));
                 }
             }
         }
@@ -219,7 +223,7 @@ public class CheckersData {
             }
         }
 
-        List<CheckersMove> legalWalks = new ArrayList<>(4); // we can find max 4 jumps for each spot
+        List<CheckersMove> legalWalks = new ArrayList<>(4); // we can find max 4 walks for each spot
 
         if (canWalkDown) {
             if (row + 1 < board.length) { // check if we can walk down
@@ -259,80 +263,97 @@ public class CheckersData {
      * Return a list of the legal jumps that the specified player can
      * make starting from the specified row and column.  If no such
      * jumps are possible, null is returned.  The logic is similar
-     * to the logic of the getLegalMoves() method.
+     * to the logic of the getLegalWalksFrom() method.
      *
      * @param player The player of the current jump, either RED or BLACK.
      * @param row    row index of the start square.
      * @param col    col index of the start square.
      */
     CheckersMove[] getLegalJumpsFrom(int player, int row, int col) {
-        List<CheckersMove> legalJumps = new ArrayList<>(4); // we can find max 4 jumps for each spot
-        switch (pieceAt(row, col)) {
-            // red pieces
-            case RED_KING: // check downwards jumps
-                if (player != RED) break;
-                if (row + 2 < board.length) { // check if we can jump downwards
-                    if (col + 2 < board[0].length) { // check if we can jump right
-                        if (pieceAt(row + 1, col + 1) == BLACK || pieceAt(row + 1, col + 1) == BLACK_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row + 2, col + 2));
-                        }
-                    }
-                    if (col - 2 >= 0) { // check if we can jump left
-                        if (pieceAt(row + 1, col - 1) == BLACK || pieceAt(row + 1, col - 1) == BLACK_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row + 2, col - 2));
-                        }
-                    }
-                }
-                // note: we don't break here because we go into the RED case, which checks for jumps in the other direction
-            case RED: // check upwards jumps
-                if (player != RED) break;
-                if (row - 2 >= 0) { // check if we can jump upwards
-                    if (col + 2 < board[0].length) { // check if we can jump right
-                        if (pieceAt(row - 1, col + 1) == BLACK || pieceAt(row - 1, col + 1) == BLACK_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row - 2, col + 2));
-                        }
-                    }
-                    if (col - 2 >= 0) { // check if we can jump left
-                        if (pieceAt(row - 1, col - 1) == BLACK || pieceAt(row - 1, col - 1) == BLACK_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row - 2, col - 2));
-                        }
-                    }
-                }
-                break;
-            // red pieces
-            case BLACK_KING: // check upwards jumps
-                if (player != BLACK) break;
-                if (row - 2 >= 0) { // check if we can jump upwards
-                    if (col + 2 < board[0].length) { // check if we can jump right
-                        if (pieceAt(row - 1, col + 1) == RED || pieceAt(row - 1, col + 1) == RED_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row - 2, col + 2));
-                        }
-                    }
-                    if (col - 2 >= 0) { // check if we can jump left
-                        if (pieceAt(row - 1, col - 1) == RED || pieceAt(row - 1, col - 1) == RED_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row - 2, col - 2));
-                        }
-                    }
-                }
-                // note: we don't break here because we go into the BLACK case, which checks for jumps in the other direction
-            case BLACK: // check downwards jumps
-                if (player != BLACK) break;
-                if (row + 2 < board.length) { // check if we can jump downwards
-                    if (col + 2 < board[0].length) { // check if we can jump right
-                        if (pieceAt(row + 1, col + 1) == RED || pieceAt(row + 1, col + 1) == RED_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row + 2, col + 2));
-                        }
-                    }
-                    if (col - 2 >= 0) { // check if we can jump left
-                        if (pieceAt(row + 1, col - 1) == RED || pieceAt(row + 1, col - 1) == RED_KING) { // check if we have something to jump over
-                            legalJumps.add(new CheckersMove(row, col, row + 2, col - 2));
-                        }
-                    }
-                }
-                break;
+        int piece = pieceAt(row, col);
+        boolean canJumpDown = false; // if the given piece has the ability to jump down
+        boolean canJumpUp = false; // if the given piece has the ability to jump up
+
+        if (player == RED) {
+            if (piece == RED) {
+                canJumpUp = true;
+            } else if (piece == RED_KING) {
+                canJumpUp = true;
+                canJumpDown = true;
+            } else {
+                return null;
+            }
+        } else { // black player
+            if (piece == BLACK) {
+                canJumpDown = true;
+            } else if (piece == BLACK_KING) {
+                canJumpUp = true;
+                canJumpDown = true;
+            } else {
+                return null;
+            }
         }
+
+        List<CheckersMove> legalJumps = new ArrayList<>(4); // we can find max 4 jumps for each spot
+
+        if (canJumpDown) {
+            if (row + 2 < board.length) { // check if we can jump downwards
+                if (col + 2 < board[0].length) { // check if we can jump right
+                    if (pieceAt(row + 2, col + 2) == EMPTY) { // check if we have space to move there
+                        if (canTakeAs(pieceAt(row + 1, col + 1), player)) { // check if we have something to jump over that we can take
+                            legalJumps.add(new CheckersMove(row, col, row + 2, col + 2));
+                        }
+                    }
+                }
+                if (col - 2 >= 0) { // check if we can jump left
+                    if (pieceAt(row + 2, col - 2) == EMPTY) { // check if we have space to move there
+                        if (canTakeAs(pieceAt(row + 1, col - 1), player)) { // check if we have something to jump over that we can take
+                            legalJumps.add(new CheckersMove(row, col, row + 2, col - 2));
+                        }
+                    }
+                }
+            }
+        }
+
+        if (canJumpUp) {
+            if (row - 2 >= 0) { // check if we can jump upwards
+                if (col + 2 < board[0].length) { // check if we can jump right
+                    if (pieceAt(row - 2, col + 2) == EMPTY) { // check if we have space to move there
+                        if (canTakeAs(pieceAt(row - 1, col + 1), player)) { // check if we have something to jump over that we can take
+                            legalJumps.add(new CheckersMove(row, col, row - 2, col + 2));
+                        }
+                    }
+                }
+                if (col - 2 >= 0) { // check if we can jump left
+                    if (pieceAt(row - 2, col - 2) == EMPTY) { // check if we have space to move there
+                        if (canTakeAs(pieceAt(row - 1, col - 1), player)) { // check if we have something to jump over that we can take
+                            legalJumps.add(new CheckersMove(row, col, row - 2, col - 2));
+                        }
+                    }
+                }
+            }
+        }
+
         if (legalJumps.isEmpty()) return null;
         return legalJumps.toArray(new CheckersMove[0]);
+    }
+
+    /**
+     * Helper method to determine if the given player is allowed
+     * to take the given target piece, returning true if it can and false otherwise.
+     *
+     * @param piece
+     * @param player
+     * @return
+     */
+    private boolean canTakeAs(int piece, int player) {
+        if (player == RED)
+            if (piece == BLACK || piece == BLACK_KING)
+                return true;
+        else if (player == BLACK)
+            if (piece == RED || piece == RED_KING)
+                return true;
+        return false;
     }
 
 }
