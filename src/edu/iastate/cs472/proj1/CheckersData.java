@@ -1,6 +1,8 @@
 package edu.iastate.cs472.proj1;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -134,7 +136,10 @@ public class CheckersData {
             board[toRow][toCol] = RED_KING;
         } else if (toRow == board.length - 1 && pieceAt(toRow, toCol) == BLACK) { // make a black king if it reached the bottom
             board[toRow][toCol] = BLACK_KING;
+        } else { // no king here
+            return false;
         }
+        return true;
     }
 
     /**
@@ -149,8 +154,104 @@ public class CheckersData {
      * @param player color of the player, RED or BLACK
      */
     CheckersMove[] getLegalMoves(int player) {
-        // Todo: Implement your getLegalMoves here.
+        List<CheckersMove> legalMoves = new ArrayList<>();
+
+        // try to find any jumps
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (i % 2 == j % 2) { // checkers are only on every other square
+                    legalMoves.addAll(Arrays.asList(getLegalJumpsFrom(player, i, j)));
+                }
+            }
+        }
+        // if we have jumps, return them
+        if (!legalMoves.isEmpty())
+            return legalMoves.toArray(new CheckersMove[0]);
+
+        // try to find any legal non-jumps (walks)
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (i % 2 == j % 2) { // checkers are only on every other square
+                    legalMoves.addAll(getLegalWalksFrom(player, i, j));
+                }
+            }
+        }
+        // if we have walks, return them
+        if (!legalMoves.isEmpty())
+            return legalMoves.toArray(new CheckersMove[0]);
+
         return null;
+    }
+
+    /**
+     * Added helper method.
+     *
+     * Return a list of the legal non-jumps (walks) that the specified
+     * player can make starting from the specified row and column.
+     * If no such "walks" are possible, an empty list is returned.
+     *
+     * @param player The player of the current jump, either RED or BLACK.
+     * @param row    row index of the start square.
+     * @param col    col index of the start square.
+     */
+    private List<CheckersMove> getLegalWalksFrom(int player, int row, int col) {
+        int piece = pieceAt(row, col);
+        boolean canWalkDown = false; // if the given piece has the ability to walk down
+        boolean canWalkUp = false; // if the given piece has the ability to walk up
+
+        if (player == RED) {
+            if (piece == RED) {
+                canWalkUp = true;
+            } else if (piece == RED_KING) {
+                canWalkUp = true;
+                canWalkDown = true;
+            } else {
+                return Collections.emptyList();
+            }
+        } else { // black player
+            if (piece == BLACK) {
+                canWalkDown = true;
+            } else if (piece == BLACK_KING) {
+                canWalkUp = true;
+                canWalkDown = true;
+            } else {
+                return Collections.emptyList();
+            }
+        }
+
+        List<CheckersMove> legalWalks = new ArrayList<>(4); // we can find max 4 jumps for each spot
+
+        if (canWalkDown) {
+            if (row + 1 < board.length) { // check if we can walk down
+                if (col + 1 < board[0].length) { // check if we can walk right
+                    if (pieceAt(row + 1, col + 1) == EMPTY) { // check if we have space to move there
+                        legalWalks.add(new CheckersMove(row, col, row + 1, col + 1));
+                    }
+                }
+                if (col - 1 >= 0) { // check if we can walk left
+                    if (pieceAt(row + 1, col - 1) == EMPTY) { // check if we have space to move there
+                        legalWalks.add(new CheckersMove(row, col, row + 1, col - 1));
+                    }
+                }
+            }
+        }
+
+        if (canWalkUp) {
+            if (row - 1 >= 0) { // check if we can walk up
+                if (col + 1 < board[0].length) { // check if we can walk right
+                    if (pieceAt(row - 1, col + 1) == EMPTY) { // check if we have space to move there
+                        legalWalks.add(new CheckersMove(row, col, row - 1, col + 1));
+                    }
+                }
+                if (col - 1 >= 0) { // check if we can walk left
+                    if (pieceAt(row - 1, col - 1) == EMPTY) { // check if we have space to move there
+                        legalWalks.add(new CheckersMove(row, col, row - 1, col - 1));
+                    }
+                }
+            }
+        }
+
+        return legalWalks;
     }
 
 
