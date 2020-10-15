@@ -348,11 +348,9 @@ public class CheckersData {
      */
     private boolean canTakeAs(int piece, int player) {
         if (player == RED)
-            if (piece == BLACK || piece == BLACK_KING)
-                return true;
+            return piece == BLACK || piece == BLACK_KING;
         else if (player == BLACK)
-            if (piece == RED || piece == RED_KING)
-                return true;
+            return piece == RED || piece == RED_KING;
         return false;
     }
 
