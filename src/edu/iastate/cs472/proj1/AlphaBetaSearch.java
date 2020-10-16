@@ -43,7 +43,7 @@ public class AlphaBetaSearch {
             CheckersData clone = new CheckersData(board);
             clone.makeMove(move);
             double value = maxValue(clone, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0, null);
-            if (value < minValue) {
+            if (value <= minValue) {
                 minValue = value;
                 chosenMove = move;
             }
