@@ -7,7 +7,7 @@ package edu.iastate.cs472.proj1;
  */
 public class AlphaBetaSearch {
     private static int BOARD_SIZE = 8;
-    private static int MAX_DEPTH = 6;
+    private static int MAX_DEPTH = 8;
 
     private CheckersData board;
 
