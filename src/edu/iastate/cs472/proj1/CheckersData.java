@@ -39,6 +39,18 @@ public class CheckersData {
         setUpGame();
     }
 
+    /**
+     * Copy constructor.
+     *
+     * @param original
+     */
+    CheckersData(CheckersData original) {
+        board = new int[8][8];
+        for (int i = 0; i < board.length; i++) {
+            board[i] = original.board[i].clone();
+        }
+    }
+
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_YELLOW = "\u001B[33m";
@@ -79,7 +91,8 @@ public class CheckersData {
      * and all such squares in the last three rows contain red squares.
      */
     void setUpGame() {
-        // note: since it's an array of primitives, everything is by default initialized to 0 = EMPTY.
+        // note: since it's an array of primitives, everything is by default initialized to 0 = EMPTY
+        // but if it's after a game was already played we have to fix the middle rows.
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
                 if (i % 2 == j % 2) { // we need to place a piece
@@ -87,6 +100,8 @@ public class CheckersData {
                         board[i][j] = BLACK;
                     } else if (i >= board.length - 3) { // we should place a red piece
                         board[i][j] = RED;
+                    } else {
+                        board[i][j] = EMPTY;
                     }
                 }
             }

@@ -1,6 +1,11 @@
 package edu.iastate.cs472.proj1;
 
+import java.util.Arrays;
+
 public class AlphaBetaSearch {
+    private static int BOARD_SIZE = 8;
+    private static int MAX_DEPTH = 6;
+
     private CheckersData board;
 
     // An instance of this class will be created in the Checkers.Board
@@ -40,5 +45,82 @@ public class AlphaBetaSearch {
 
         // Here, we simply return the first legal move for demonstration.
         return legalMoves[0];
+    }
+
+    private double minValue(CheckersData board, int player, double alpha, double beta, int depth) {
+        if (depth == MAX_DEPTH)
+            return evaluate(board);
+        double value = Double.POSITIVE_INFINITY;
+        for (CheckersMove move : board.getLegalMoves(player)) {
+            value
+        }
+    }
+
+    /**
+     * Evaluation function for a board state that works as follows:
+     *
+     * Each normal piece is worth 1 point - however, if it is 2 rows away from promotion it is worth 1.2 points,
+     * and if it is 1 row away it is worth 1.45 points. Pieces on a side edge are worth 75% of their normal
+     * value because they can only move away from the wall, so they only have half of their normal moves.
+     *
+     * Each kinged piece is worth 2.5 points, but the value is cut by 1/4 for every wall it is touching.
+     *
+     * Red pieces get positive values, black pieces get negative values. If there are no black pieces left, red gets
+     * a score of 100, and vice-versa: if there are no reds left, black gets -100.
+     *
+     * @param board
+     * @return
+     */
+    private double evaluate(CheckersData board) {
+        double red = 0;
+        double black = 0;
+
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (i % 2 == j % 2) { // checkers are only on every other square
+                    int piece = board.pieceAt(i, j);
+                    if (piece == CheckersData.RED) {
+                        double value = 1;
+                        if (i == 1) {
+                            value = 1.45;
+                        } else if (i == 2) {
+                            value = 1.2;
+                        }
+                        if (j == 0 || j == BOARD_SIZE - 1) {
+                            value *= 0.75;
+                        }
+                        red += value;
+                    } else if (piece == CheckersData.BLACK) {
+                        double value = 1;
+                        if (i == BOARD_SIZE - 2) {
+                            value = 1.45;
+                        } else if (i == BOARD_SIZE - 3) {
+                            value = 1.2;
+                        }
+                        if (j == 0 || j == BOARD_SIZE - 1) {
+                            value *= 0.75;
+                        }
+                        black += value;
+                    } else if (piece == CheckersData.RED_KING || piece == CheckersData.BLACK_KING) {
+                        double value = 2.5;
+                        if (i == 0 || i == BOARD_SIZE - 1) {
+                            value *= 0.75;
+                        }
+                        if (j == 0 || j == BOARD_SIZE - 1) {
+                            value *= 0.75;
+                        }
+                        if (piece == CheckersData.RED_KING) {
+                            red += value;
+                        } else {
+                            black += value;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (red == 0) return -100;
+        if (black == 0) return 100;
+        return red - black;
     }
 }
