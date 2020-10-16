@@ -55,23 +55,35 @@ public class AlphaBetaSearch {
         return chosenMove;
     }
 
-    private double maxValue(CheckersData board, double alpha, double beta, int depth) {}
+    private double maxValue(CheckersData board, double alpha, double beta, int depth, CheckersMove fromJump) {}
 
     /**
      * Find the value to proceed with at a min node, meaning it is BLACK's turn.
+     * 
      * Uses alpha-beta pruning.
+     *
+     * If fromJump is non-null, it means we're continuing a jumping streak, and the expanded moves
+     * must be jumps off of the previous jump.
      *
      * @param board
      * @param alpha
      * @param beta
      * @param depth
+     * @param fromJump The move we just came from if we're continuing a multi-move jumping spree, null otherwise
      * @return the min value at the node
      */
-    private double minValue(CheckersData board, double alpha, double beta, int depth) {
+    private double minValue(CheckersData board, double alpha, double beta, int depth, CheckersMove fromJump) {
         if (depth == MAX_DEPTH)
             return evaluate(board);
         double value = Double.POSITIVE_INFINITY;
         for (CheckersMove move : board.getLegalMoves(CheckersData.BLACK)) {
+            // check if we're continuing a jumping spree
+            if (fromJump != null) {
+                // if this move isn't another jump from our past jump's piece, skip it
+                if (move.fromRow != fromJump.toRow || move.fromCol != fromJump.toCol)
+                    continue;
+            }
+
             // make a clone with the move made
             CheckersData clone = new CheckersData(board);
             boolean isKingJump = clone.makeMove(move);
@@ -79,17 +91,23 @@ public class AlphaBetaSearch {
             // it's possible we have another legal move after jumping
             if (!isKingJump && move.isJump()) {
                 CheckersMove[] legalJumps = clone.getLegalJumpsFrom(CheckersData.BLACK, move.toRow, move.toCol);
-                if (legalJumps != null) { // we have more jumps
-                    // TODO: fix this
+                if (legalJumps != null) { // we have more jumps from our jump, test those
+                    // note - we leave depth the same because we can max expand 3 nodes, and I wanted to test
+                    // depth by the number of alternating moves expanded, not the number of nodes
                     value = Math.min(value, minValue(
-                            clone, alpha, beta, depth + 1));
+                            clone, alpha, beta, depth, move));
 
+                    if (value <= alpha)
+                        return value;
+                    beta = Math.min(beta, value);
+
+                    continue;
                 }
             }
 
             // time to go deeper
             value = Math.min(value, maxValue(
-                    clone, alpha, beta, depth + 1));
+                    clone, alpha, beta, depth + 1, null));
 
             // say goodbye to dates and hello to pruning
             if (value <= alpha)
