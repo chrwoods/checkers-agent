@@ -1,7 +1,10 @@
 package edu.iastate.cs472.proj1;
 
-import java.util.Arrays;
-
+/**
+ * Alpha-Beta Pruning Search to calculate the best move for black with a given checkers board.
+ *
+ * @author cswoods
+ */
 public class AlphaBetaSearch {
     private static int BOARD_SIZE = 8;
     private static int MAX_DEPTH = 6;
@@ -65,11 +68,18 @@ public class AlphaBetaSearch {
      * @return the min value at the node
      */
     private double maxValue(CheckersData board, double alpha, double beta, int depth, CheckersMove fromJump) {
+        // if we're at max depth, just evaluate our board instead of expanding
         if (depth == MAX_DEPTH)
             return evaluate(board);
 
         double value = Double.NEGATIVE_INFINITY;
-        for (CheckersMove move : board.getLegalMoves(CheckersData.RED)) {
+        CheckersMove[] moves = board.getLegalMoves(CheckersData.RED);
+
+        // if no moves are available, RED has lost all their pieces and is about to lose.
+        if (moves == null) return value;
+
+        // expand every legal move
+        for (CheckersMove move : moves) {
             // check if we're continuing a jumping spree
             if (fromJump != null) {
                 // if this move isn't another jump from our past jump's piece, skip it
@@ -126,10 +136,18 @@ public class AlphaBetaSearch {
      * @return the min value at the node
      */
     private double minValue(CheckersData board, double alpha, double beta, int depth, CheckersMove fromJump) {
+        // if we're at max depth, just evaluate our board instead of expanding
         if (depth == MAX_DEPTH)
             return evaluate(board);
+
         double value = Double.POSITIVE_INFINITY;
-        for (CheckersMove move : board.getLegalMoves(CheckersData.BLACK)) {
+        CheckersMove[] moves = board.getLegalMoves(CheckersData.BLACK);
+
+        // if no moves are available, RED has lost all their pieces and is about to lose.
+        if (moves == null) return value;
+
+        // expand every legal move
+        for (CheckersMove move : moves) {
             // check if we're continuing a jumping spree
             if (fromJump != null) {
                 // if this move isn't another jump from our past jump's piece, skip it
