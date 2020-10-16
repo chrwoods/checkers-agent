@@ -18,7 +18,7 @@ public class AlphaBetaSearch {
     // Todo: You can implement your helper methods here
 
     /**
-     *  You need to implement the Alpha-Beta pruning algorithm here to
+     * You need to implement the Alpha-Beta pruning algorithm here to
      * find the best move at current stage.
      * The input parameter legalMoves contains all the possible moves.
      * It contains four integers:  fromRow, fromCol, toRow, toCol
@@ -40,20 +40,63 @@ public class AlphaBetaSearch {
         System.out.println(board);
         System.out.println();
 
-        // Todo: return the move for the current state
+        double minValue = Double.POSITIVE_INFINITY;
+        CheckersMove chosenMove = null;
+        for (CheckersMove move : legalMoves) {
+            CheckersData clone = new CheckersData(board);
+            clone.makeMove(move);
+            double value = maxValue(clone, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0);
+            if (value < minValue) {
+                minValue = value;
+                chosenMove = move;
+            }
+        }
 
-
-        // Here, we simply return the first legal move for demonstration.
-        return legalMoves[0];
+        return chosenMove;
     }
 
-    private double minValue(CheckersData board, int player, double alpha, double beta, int depth) {
+    private double maxValue(CheckersData board, double alpha, double beta, int depth) {}
+
+    /**
+     * Find the value to proceed with at a min node, meaning it is BLACK's turn.
+     * Uses alpha-beta pruning.
+     *
+     * @param board
+     * @param alpha
+     * @param beta
+     * @param depth
+     * @return the min value at the node
+     */
+    private double minValue(CheckersData board, double alpha, double beta, int depth) {
         if (depth == MAX_DEPTH)
             return evaluate(board);
         double value = Double.POSITIVE_INFINITY;
-        for (CheckersMove move : board.getLegalMoves(player)) {
-            value
+        for (CheckersMove move : board.getLegalMoves(CheckersData.BLACK)) {
+            // make a clone with the move made
+            CheckersData clone = new CheckersData(board);
+            boolean isKingJump = clone.makeMove(move);
+
+            // it's possible we have another legal move after jumping
+            if (!isKingJump && move.isJump()) {
+                CheckersMove[] legalJumps = clone.getLegalJumpsFrom(CheckersData.BLACK, move.toRow, move.toCol);
+                if (legalJumps != null) { // we have more jumps
+                    // TODO: fix this
+                    value = Math.min(value, minValue(
+                            clone, alpha, beta, depth + 1));
+
+                }
+            }
+
+            // time to go deeper
+            value = Math.min(value, maxValue(
+                    clone, alpha, beta, depth + 1));
+
+            // say goodbye to dates and hello to pruning
+            if (value <= alpha)
+                return value;
+            beta = Math.min(beta, value);
         }
+        return value;
     }
 
     /**
