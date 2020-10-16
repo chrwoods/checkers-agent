@@ -15,16 +15,10 @@ public class AlphaBetaSearch {
         this.board = board;
     }
 
-    // Todo: You can implement your helper methods here
-
     /**
-     * You need to implement the Alpha-Beta pruning algorithm here to
-     * find the best move at current stage.
-     * The input parameter legalMoves contains all the possible moves.
-     * It contains four integers:  fromRow, fromCol, toRow, toCol
-     * which represents a move from (fromRow, fromCol) to (toRow, toCol).
-     * It also provides a utility method `isJump` to see whether this
-     * move is a jump or a simple move.
+     * Chooses the best move for black out of the given legal moves.
+     *
+     * Has logic similar to minValue since it is BLACK's turn, so we are a min node.
      *
      * @param legalMoves All the legal moves for the agent at current step.
      */
@@ -45,7 +39,7 @@ public class AlphaBetaSearch {
         for (CheckersMove move : legalMoves) {
             CheckersData clone = new CheckersData(board);
             clone.makeMove(move);
-            double value = maxValue(clone, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0);
+            double value = maxValue(clone, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0, null);
             if (value < minValue) {
                 minValue = value;
                 chosenMove = move;
@@ -55,11 +49,70 @@ public class AlphaBetaSearch {
         return chosenMove;
     }
 
-    private double maxValue(CheckersData board, double alpha, double beta, int depth, CheckersMove fromJump) {}
+    /**
+     * Find the value to proceed with at a max node, meaning it is RED's turn.
+     *
+     * Uses alpha-beta pruning.
+     *
+     * If fromJump is non-null, it means we're continuing a jumping streak, and the expanded moves
+     * must be jumps off of the previous jump.
+     *
+     * @param board
+     * @param alpha
+     * @param beta
+     * @param depth
+     * @param fromJump The move we just came from if we're continuing a multi-move jumping spree, null otherwise
+     * @return the min value at the node
+     */
+    private double maxValue(CheckersData board, double alpha, double beta, int depth, CheckersMove fromJump) {
+        if (depth == MAX_DEPTH)
+            return evaluate(board);
+
+        double value = Double.NEGATIVE_INFINITY;
+        for (CheckersMove move : board.getLegalMoves(CheckersData.RED)) {
+            // check if we're continuing a jumping spree
+            if (fromJump != null) {
+                // if this move isn't another jump from our past jump's piece, skip it
+                if (move.fromRow != fromJump.toRow || move.fromCol != fromJump.toCol)
+                    continue;
+            }
+
+            // make a clone with the move made
+            CheckersData clone = new CheckersData(board);
+            boolean isKingJump = clone.makeMove(move);
+
+            // it's possible we have another legal move after jumping
+            if (!isKingJump && move.isJump()) {
+                CheckersMove[] legalJumps = clone.getLegalJumpsFrom(CheckersData.RED, move.toRow, move.toCol);
+                if (legalJumps != null) {
+                    // we have more jumps from our jump, those are required moves so we test them instead
+                    value = Math.max(value, maxValue(
+                            clone, alpha, beta, depth + 1, move));
+
+                    if (value >= beta)
+                        return value;
+                    alpha = Math.max(alpha, value);
+
+                    continue;
+                }
+                // if we don't have more jumps from our jump, we expand other moves instead.
+            }
+
+            // time to go deeper
+            value = Math.max(value, minValue(
+                    clone, alpha, beta, depth + 1, null));
+
+            // say goodbye to dates and hello to pruning
+            if (value >= beta)
+                return value;
+            alpha = Math.max(alpha, value);
+        }
+        return value;
+    }
 
     /**
      * Find the value to proceed with at a min node, meaning it is BLACK's turn.
-     * 
+     *
      * Uses alpha-beta pruning.
      *
      * If fromJump is non-null, it means we're continuing a jumping streak, and the expanded moves
@@ -91,11 +144,10 @@ public class AlphaBetaSearch {
             // it's possible we have another legal move after jumping
             if (!isKingJump && move.isJump()) {
                 CheckersMove[] legalJumps = clone.getLegalJumpsFrom(CheckersData.BLACK, move.toRow, move.toCol);
-                if (legalJumps != null) { // we have more jumps from our jump, test those
-                    // note - we leave depth the same because we can max expand 3 nodes, and I wanted to test
-                    // depth by the number of alternating moves expanded, not the number of nodes
+                if (legalJumps != null) {
+                    // we have more jumps from our jump, those are required moves so we test them instead
                     value = Math.min(value, minValue(
-                            clone, alpha, beta, depth, move));
+                            clone, alpha, beta, depth + 1, move));
 
                     if (value <= alpha)
                         return value;
